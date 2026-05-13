@@ -32,7 +32,6 @@ const { getBuffer, getGroupAdmins, getRandom, h2k, isUrl, Json, runtime, sleep, 
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid, } = require("./lib/exif");
 const abc = fetchJson
 const { sms, downloadMediaMessage } = require("./lib/msg");
-const GroupEvents = require('./lib/groupevents');
 const axios = require("axios");
 const fetch = require("node-fetch");
 const { File } = require("megajs");
@@ -188,8 +187,6 @@ async function connectToWA() {
 
   conn.ev.on("creds.update", saveCreds);
 	// ====================
-	conn.ev.on("group-participants.update", (update) => GroupEvents(conn, update));
-	//=====================
   conn.ev.on("messages.upsert", async (mek) => {
     try {
       mek = mek.messages[0];
