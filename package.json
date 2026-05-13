@@ -1,0 +1,42 @@
+{
+  "name": "MANISHA-MD-V6",
+  "version": "v.6",
+  "scripts": {
+    "start": "node index.js",
+    "stop": "pm2 stop MANISHA-MD-V6",
+    "restart": "git pull && npm stop && npm start",
+    "stash": "git stash && git stash drop"
+  },
+  "dependencies": {
+    "baileys": "github:manaofc/baileys",
+    "axios": "latest",
+    "jimp": "latest",
+    "lolcatjs": "latest",
+    "cheerio": "latest",
+    "crypto": "latest",
+    "express": "latest",
+    "events": "latest",
+    "file_size_url": "latest",
+    "file-type": "latest",
+    "fs-extra": "latest",
+    "mathjs": "latest",
+    "megajs": "latest",
+    "mime-types": "latest",
+    "node-fetch": "latest",
+    "node-cache": "latest",
+    "google-tts-api": "latest",
+    "os": "latest",
+    "path": "latest",
+    "pino": "latest",
+    "pm2": "latest",
+    "qrcode-terminal": "latest",
+    "node-webpmux": "latest",
+    "fluent-ffmpeg": "latest",
+    "util": "latest",
+    "pdfkit": "latest",
+    "figlet": "latest",
+    "yt-search": "latest",
+    "subz.lk": "latest",
+    "seedr": "latest"
+  }
+}
