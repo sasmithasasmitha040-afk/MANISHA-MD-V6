@@ -130,7 +130,7 @@ if (!fs.existsSync(credsPath)) {
 // <<==========PORTS===========>>
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 3034;
+const port = process.env.PORT || 8080;
 //====================================
 async function connectToWA() {
   const { version, isLatest } = await fetchLatestBaileysVersion();
