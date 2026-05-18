@@ -252,7 +252,7 @@ socket.ev.on("messages.upsert", async (mek) => {
   const text = `MANAOFC LITE BOT JUST NOW SEEN`
   await socket.sendMessage(user, { text: text, react: { text: '💜', key: mek.key } }, { quoted: mek })
             }
-  if (mek.key && mek.key.remoteJid === 'status@broadcast' && userConfig.AUTOLIKESTATUS === "true") {
+  if (mek.key && mek.key.remoteJid === 'status@broadcast' && userConfig.AUTO_LIKE_STATUS === "true") {
     const user = await conn.decodeJid(conn.user.id);
     await socket.sendMessage(mek.key.remoteJid,
     { react: { key: mek.key, text: '💚' } },
