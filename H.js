@@ -126,8 +126,242 @@ async function cleanDuplicateFiles(number) {
 function setupCommandHandlers(socket, number, userConfig) {
     const commandCooldowns = new Map();
     const COMMAND_COOLDOWN = 1000; // 1 second per user
-    
-    
+
+   // ---------------- BUTTON MESSAGE -----------------
+const cos = '```';
+const NON_BUTTON = true; // Implement a switch to on/off this feature...
+
+socket.buttonMessage = async (jid, msgData, quotemek) => {
+
+if (!NON_BUTTON) {
+          await socket.sendMessage(jid, msgData);
+        } else {
+
+let result = "";
+const CMD_ID_MAP = [];
+
+msgData.buttons.forEach((button, bttnIndex) => {
+
+const mainNumber = `${bttnIndex + 1}`;
+
+result += `\n◈ *${mainNumber} - ${button.buttonText.displayText}*`;
+
+CMD_ID_MAP.push({
+cmdId: mainNumber,
+cmd: button.buttonId
+});
+
+});
+
+const buttonMessage = `
+
+${msgData.caption || msgData.text}
+
+*╭─────────────────❥➻*
+*╎*  ${cos}🔢 Reply Below Number:${cos}
+*╰─────────────────❥➻*
+
+${result}
+
+${msgData.footer || ""}
+`;
+
+const btnimg = msgData.image
+? { url: msgData.image }
+: { url: userConfig.IMAGE_PATH };
+
+const imgmsg = await socket.sendMessage(
+jid,
+{ image: btnimg, caption: buttonMessage },
+{ quoted: quotemek }
+);
+
+await updateCMDStore(imgmsg.key.id, CMD_ID_MAP);
+}
+};
+
+
+// ---------------- LIST MESSAGE -----------------
+      socket.listMessage = async (jid, msgData, quotemek) => {
+        if (!NON_BUTTON) {
+          await socket.sendMessage(jid, msgData);
+        } else {
+          let result = "";
+          const CMD_ID_MAP = [];
+
+          msgData.sections.forEach((section, sectionIndex) => {
+            const mainNumber = `${sectionIndex + 1}`;
+            result += `\n*${mainNumber} :* ${section.title}\n`;
+
+            section.rows.forEach((row, rowIndex) => {
+              const subNumber = `${mainNumber}.${rowIndex + 1}`;
+              const rowHeader = `◦  ${subNumber} - ${row.title}`;
+              result += `${rowHeader}\n`;
+              CMD_ID_MAP.push({ cmdId: subNumber, cmd: row.rowId });
+            });
+          });
+
+          const listimg = msgData.image
+            ? { url: msgData.image }
+            : { url: userConfig.IMAGE_PATH };
+
+          const listMessage = `
+${msgData.text}
+
+*╭─────────────────❥➻*
+*╎*  ${cos}🔢 Reply Below Number:${cos}
+*╰─────────────────❥➻*
+
+${result}
+
+${msgData.footer}`;
+
+          const text = await socket.sendMessage(
+            jid,
+            { image: listimg, caption: listMessage },
+            { quoted: quotemek || mek }
+          );
+
+          await updateCMDStore(text.key.id, CMD_ID_MAP);
+        }
+      };
+    fs.readdirSync("./plugins/").forEach((plugin) => {
+        if (path.extname(plugin).toLowerCase() == ".js") {
+          require("./plugins/" + plugin);
+        }
+socket.ev.on("messages.upsert", async (mek) => {
+    try {
+      mek = mek.messages[0];
+      if (!mek.message) return;
+      mek.message =
+        getContentType(mek.message) === "ephemeralMessage"
+          ? mek.message.ephemeralMessage.message
+          : mek.message;
+      if (userConfig.AUTO_READ_STATUS === "true") {
+        if (mek.key && mek.key.remoteJid === "status@broadcast") {
+          await conn.readMessages([mek.key]);
+        }
+      }
+
+      if (mek.key && mek.key.remoteJid === "status@broadcast") return;
+      const m = sms(socket, mek);
+      const type = getContentType(mek.message);
+      const content = JSON.stringify(mek.message);
+      const from = mek.key.remoteJid;
+      const quoted =
+        type == "extendedTextMessage" &&
+        mek.message.extendedTextMessage.contextInfo != null
+          ? mek.message.extendedTextMessage.contextInfo.quotedMessage || []
+          : [];
+      const body =
+        type === "conversation"
+          ? mek.message.conversation
+          : mek.message?.extendedTextMessage?.contextInfo?.hasOwnProperty(
+              "quotedMessage"
+            ) &&
+            (await isbtnID(
+              mek.message?.extendedTextMessage?.contextInfo?.stanzaId
+            )) &&
+            getCmdForCmdId(
+              await getCMDStore(
+                mek.message?.extendedTextMessage?.contextInfo?.stanzaId
+              ),
+              mek?.message?.extendedTextMessage?.text
+            )
+          ? getCmdForCmdId(
+              await getCMDStore(
+                mek.message?.extendedTextMessage?.contextInfo?.stanzaId
+              ),
+              mek?.message?.extendedTextMessage?.text
+            )
+          : type === "extendedTextMessage"
+          ? mek.message.extendedTextMessage.text
+          : type == "imageMessage" && mek.message.imageMessage.caption
+          ? mek.message.imageMessage.caption
+          : type == "videoMessage" && mek.message.videoMessage.caption
+          ? mek.message.videoMessage.caption
+          : "";
+      const prefix = config.PREFIX
+        ? config.PREFIX
+        : /^./.test(body)
+        ? body.match(/^./gi)
+        : "#";
+      const isCmd = body.startsWith(prefix);
+      const command = isCmd
+        ? body.slice(prefix.length).trim().split(" ").shift().toLowerCase()
+        : "";
+      const args = body.trim().split(/ +/).slice(1);
+      const q = args.join(" ");
+      const isGroup = from.endsWith("@g.us");
+      const sender = mek.key.fromMe
+        ? conn.user.id.split(":")[0] + "@s.whatsapp.net" || conn.user.id
+        : mek.key.participant || mek.key.remoteJid;
+      const senderNumber = sender.split("@")[0];
+      const mentionByTag =
+        type == "extendedTextMessage" &&
+        mek.message.extendedTextMessage.contextInfo != null
+          ? mek.message.extendedTextMessage.contextInfo.quotedMessage || []
+          : [];
+      const botNumber = conn.user.id.split(":")[0];
+	  const pushname = mek.pushName || "NO NUMBER";
+	  const isMe = botNumber.includes(senderNumber);
+	  const isOwner = ownerNumber?.includes(senderNumber) || isMe;
+      const botNumber2 = await jidNormalizedUser(conn.user.id);
+      const groupMetadata = isGroup
+        ? await conn.groupMetadata(from).catch((e) => {})
+        : "";
+      const groupName = isGroup ? groupMetadata.subject : "";
+      const participants = isGroup ? await groupMetadata.participants : "";
+      const groupAdmins = isGroup ? await getGroupAdmins(participants) : "";
+      const isBotAdmins = isGroup ? groupAdmins.includes(botNumber2) : false;
+      const isAdmins = isGroup ? groupAdmins.includes(sender) : false;
+      const isreaction = m.message.reactionMessage ? true : false;
+	  const manaofc = await abc;
+
+// Reply helper
+            const reply = async (text) => {
+                await socket.sendMessage(from, { text }, { quoted: mek });
+            };
+
+const events = require("./command");
+      const cmdName = isCmd
+        ? body.slice(1).trim().split(" ")[0].toLowerCase()
+        : false;
+      if (isCmd) {
+        const cmd = events.commands.find((cmd) => cmd.pattern === cmdName) ||
+          events.commands.find(
+            (cmd) => cmd.alias && cmd.alias.includes(cmdName));
+        if (cmd) {
+          if (cmd.react)
+            conn.sendMessage(from, {
+              react: { text: cmd.react, key: mek.key },});
+          try {
+            cmd.function(socket, mek, m, { from,prefix, quoted, body, isCmd, command,args,q,isGroup,sender,senderNumber,botNumber2,botNumber,pushname,isMe,isOwner,groupMetadata,groupName,participants,groupAdmins,isBotAdmins,isAdmins,reply,});
+          } catch (e) {
+            console.error("[PLUGIN ERROR] ", e);
+          }
+        }
+      }
+      events.commands.map(async (command) => {
+        if (body && command.on === "body") {
+          command.function(socket, mek, m, { from,prefix,quoted,body,isCmd,command,args,q,isGroup,sender,senderNumber,botNumber2,botNumber,pushname,isMe,isOwner,groupMetadata,groupName,participants,groupAdmins,isBotAdmins,isAdmins,reply,});
+        } else if (mek.q && command.on === "text") {
+          command.function(socket, mek, m, { from,prefix,quoted,body,isCmd,command,args,q,isGroup,sender,senderNumber,botNumber2,botNumber,pushname,isMe,isOwner,groupMetadata,groupName,participants,groupAdmins,isBotAdmins,isAdmins,reply,});
+        } else if (
+          (command.on === "image" || command.on === "photo") &&
+          mek.type === "imageMessage"
+        ) {
+          command.function(socket, mek, m, { from,prefix, quoted, body, isCmd, command,args,q,isGroup,sender,senderNumber,botNumber2,botNumber,pushname,isMe,isOwner,groupMetadata,groupName,participants,groupAdmins,isBotAdmins,isAdmins,reply,});
+        } else if (command.on === "sticker" && mek.type === "stickerMessage") {
+          command.function(socket, mek, m, { from,prefix, quoted, body, isCmd, command,args,q,isGroup,sender,senderNumber,botNumber2,botNumber,pushname,isMe,isOwner,groupMetadata,groupName,participants,groupAdmins,isBotAdmins,isAdmins,reply,});
+        }
+      });
+
+ } catch (e) {
+     // const isError = String(e);
+      console.log(e);
+    }
+  });
 // Memory optimization: Batch GitHub operations
 async function deleteSessionFromGitHub(number) {
     try {
