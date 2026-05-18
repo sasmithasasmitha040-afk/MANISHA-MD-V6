@@ -282,8 +282,8 @@ socket.ev.on("messages.upsert", async (mek) => {
           : type == "videoMessage" && mek.message.videoMessage.caption
           ? mek.message.videoMessage.caption
           : "";
-      const prefix = config.PREFIX
-        ? config.PREFIX
+      const prefix = userConfig.PREFIX
+        ? userConfig.PREFIX
         : /^./.test(body)
         ? body.match(/^./gi)
         : "#";
