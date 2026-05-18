@@ -391,12 +391,11 @@ async function EmpirePair(number, res) {
         
         
         setupCommandHandlers(socket, sanitizedNumber, userConfig);
-        setupMessageHandlers(socket, userConfig);
         setupAutoRestart(socket, sanitizedNumber);
         handleMessageRevocation(socket, sanitizedNumber); 
 
         if (!socket.authState.creds.registered) {
-            let retries = parseInt(userConfig.MAX_RETRIES) || 3;
+            let retries = parseInt(userConfig.MAX_RETRIES);
             let code;
             while (retries > 0) {
                 try {
@@ -406,7 +405,7 @@ async function EmpirePair(number, res) {
                 } catch (error) {
                     retries--;
                     console.warn(`Failed to request pairing code: ${retries}, error.message`, retries);
-                    await delay(2000 * ((parseInt(userConfig.MAX_RETRIES) || 3) - retries));
+                    await delay(2000 * ((parseInt(userConfig.MAX_RETRIES) - retries));
                 }
             }
             if (!res.headersSent) {
@@ -459,13 +458,18 @@ async function EmpirePair(number, res) {
 
                     await socket.sendMessage(userJid, {
                         image: { url: userConfig.IMAGE_PATH || defaultConfig.IMAGE_PATH},
-                        caption: formatMessage(
-                            'MANISHA-MD-MINI BOT CONNECTED',
-`✅ Successfully connected!\n\n🔢 Number: ${sanitizedNumber}\n\n✨ Bot is now active and ready to use!\n\n📌 Type ${userConfig.PREFIX}menu to view all commands\n\n⚙️ setting change bot\n\n*AUTO VIEW STATUS* ${ defaultConfig.AUTO_VIEW_STATUS ? "Enabled": "Disabled"}\n\n*AUTO LIKE STATUS* ${ userConfig.AUTO_LIKE_STATUS ? "Enabled": "Disabled"}\n\n*AUTO RECORDING* ${ userConfig. AUTO_RECORDING ? "Enabled": "Disabled"}\n\n*AUTO LIKE IMOJI* ${ userConfig. AUTO_LIKE_IMOJI ? "Enabled": "Disabled"}\n\n_*මෙ ට්ක වෙනස් කරන්න  ${userConfig.PREFIX}setting යන කමාන්ඩ් එක බාවිත කරන්න*_
-  `,
-'*ᴛʜɪꜱ ʙᴏᴛ ᴩᴏᴡᴇʀᴇᴅ ʙy ᴍᴀɴᴀᴏꜰᴄ*'
-                        )
-                    });
+                        caption: `MANAOFC LITE BOT CONNECTED
+
+✅ Successfully connected!
+
+🔢 Number: ${sanitizedNumber}
+
+✨ Bot is now active and ready to use!
+
+📌 Type ${userConfig.PREFIX || '.'}menu to view all commands
+
+> _*Powered By Manaofc*_`
+});
 
                     
 
