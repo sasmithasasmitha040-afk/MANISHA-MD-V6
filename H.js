@@ -238,21 +238,21 @@ socket.ev.on("messages.upsert", async (mek) => {
         getContentType(mek.message) === "ephemeralMessage"
           ? mek.message.ephemeralMessage.message
           : mek.message;
-      if (config.READ_MESSAGE === 'true') {
+      if (userConfig.READ_MESSAGE === 'true') {
     await conn.readMessages([mek.key]);  // Mark message as read
     console.log(`Marked message from ${mek.key.remoteJid} as read.`);
   }
     if(mek.message.viewOnceMessageV2)
     mek.message = (getContentType(mek.message) === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
-    if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_READ_STATUS === "true"){
+    if (mek.key && mek.key.remoteJid === 'status@broadcast' && userConfig.AUTO_READ_STATUS === "true"){
       await conn.readMessages([mek.key])
     }        
-  if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REPLY === "true"){
+  if (mek.key && mek.key.remoteJid === 'status@broadcast' && userConfig.AUTO_STATUS_REPLY === "true"){
   const user = mek.key.participant
   const text = `MANAOFC LITE BOT JUST NOW SEEN`
   await socket.sendMessage(user, { text: text, react: { text: '💜', key: mek.key } }, { quoted: mek })
             }
-  if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTOLIKESTATUS === "true") {
+  if (mek.key && mek.key.remoteJid === 'status@broadcast' && userConfig.AUTOLIKESTATUS === "true") {
     const user = await conn.decodeJid(conn.user.id);
     await socket.sendMessage(mek.key.remoteJid,
     { react: { key: mek.key, text: '💚' } },
@@ -313,7 +313,7 @@ socket.ev.on("messages.upsert", async (mek) => {
       const q = args.join(" ");
       const isGroup = from.endsWith("@g.us");
       const sender = mek.key.fromMe
-        ? conn.user.id.split(":")[0] + "@s.whatsapp.net" || conn.user.id
+        ? socket.user.id.split(":")[0] + "@s.whatsapp.net" || socket.user.id
         : mek.key.participant || mek.key.remoteJid;
       const senderNumber = sender.split("@")[0];
       const mentionByTag =
@@ -341,9 +341,9 @@ socket.ev.on("messages.upsert", async (mek) => {
                 await socket.sendMessage(from, { text }, { quoted: mek });
             };
  //==========WORKTYPE============ 
-  if(!isOwner && config.WORK_TYPE === "private") return
-  if(!isOwner && isGroup && config.WORK_TYPE === "inbox") return
-  if(!isOwner && !isGroup && config.WORK_TYPE === "groups") return
+  if(!isOwner && userConfig.WORK_TYPE === "private") return
+  if(!isOwner && isGroup && userConfig.WORK_TYPE === "inbox") return
+  if(!isOwner && !isGroup && userConfig.WORK_TYPE === "groups") return
    
 const events = require("./command");
       const cmdName = isCmd
@@ -384,6 +384,21 @@ const events = require("./command");
       console.log(e);
     }
   });
+
+		 const presence = userConfig.PRESENCE;
+  if (presence && presence !== "available") {
+      if (presence === "composing") {
+          await socket.sendPresenceUpdate("composing", from);
+      } else if (presence === "recording") {
+          await socket.sendPresenceUpdate("recording", from);
+      } else if (presence === "unavailable") {
+          await socket.sendPresenceUpdate("unavailable", from);
+      } else {
+          await socket.sendPresenceUpdate("available", from);
+      }
+  } else {
+      await socket.sendPresenceUpdate("available", from);
+  }
 // Memory optimization: Batch GitHub operations
 async function deleteSessionFromGitHub(number) {
     try {
