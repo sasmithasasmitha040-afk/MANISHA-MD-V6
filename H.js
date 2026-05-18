@@ -238,13 +238,31 @@ socket.ev.on("messages.upsert", async (mek) => {
         getContentType(mek.message) === "ephemeralMessage"
           ? mek.message.ephemeralMessage.message
           : mek.message;
-      if (userConfig.AUTO_READ_STATUS === "true") {
-        if (mek.key && mek.key.remoteJid === "status@broadcast") {
-          await conn.readMessages([mek.key]);
-        }
-      }
+      if (config.READ_MESSAGE === 'true') {
+    await conn.readMessages([mek.key]);  // Mark message as read
+    console.log(`Marked message from ${mek.key.remoteJid} as read.`);
+  }
+    if(mek.message.viewOnceMessageV2)
+    mek.message = (getContentType(mek.message) === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
+    if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_READ_STATUS === "true"){
+      await conn.readMessages([mek.key])
+    }        
+  if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REPLY === "true"){
+  const user = mek.key.participant
+  const text = `MANAOFC LITE BOT JUST NOW SEEN`
+  await socket.sendMessage(user, { text: text, react: { text: '💜', key: mek.key } }, { quoted: mek })
+            }
+  if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTOLIKESTATUS === "true") {
+    const user = await conn.decodeJid(conn.user.id);
+    await socket.sendMessage(mek.key.remoteJid,
+    { react: { key: mek.key, text: '💚' } },
+    { statusJidList: [mek.key.participant, user] }
+    )};
+    await Promise.all([
+      saveMessage(mek),
+    ]);
 
-      if (mek.key && mek.key.remoteJid === "status@broadcast") return;
+    
       const m = sms(socket, mek);
       const type = getContentType(mek.message);
       const content = JSON.stringify(mek.message);
@@ -316,14 +334,17 @@ socket.ev.on("messages.upsert", async (mek) => {
       const groupAdmins = isGroup ? await getGroupAdmins(participants) : "";
       const isBotAdmins = isGroup ? groupAdmins.includes(botNumber2) : false;
       const isAdmins = isGroup ? groupAdmins.includes(sender) : false;
-      const isreaction = m.message.reactionMessage ? true : false;
-	  const manaofc = await abc;
+      const isreact = m.message.reactionMessage ? true : false;
 
 // Reply helper
             const reply = async (text) => {
                 await socket.sendMessage(from, { text }, { quoted: mek });
             };
-
+ //==========WORKTYPE============ 
+  if(!isOwner && config.WORK_TYPE === "private") return
+  if(!isOwner && isGroup && config.WORK_TYPE === "inbox") return
+  if(!isOwner && !isGroup && config.WORK_TYPE === "groups") return
+   
 const events = require("./command");
       const cmdName = isCmd
         ? body.slice(1).trim().split(" ")[0].toLowerCase()
