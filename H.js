@@ -7,7 +7,7 @@ const pino = require('pino');
 const { Octokit } = require('@octokit/rest');
 const moment = require('moment-timezone');
 const config = require('./config')
-const { sms, downloadMediaMessage } = require("./lib/msg");
+const { sms, downloadMediaMessage, downloadAndSaveMedia, saveMessage } = require("./lib/msg");
 const { updateCMDStore, isbtnID, getCMDStore, getCmdForCmdId } = require("./lib/button.js");
 const { getBuffer, getGroupAdmins, getRandom, h2k, isUrl, Json, runtime, sleep, fetchJson, getsize, formatBytes, fetchBuffer, formatSize, getFile } = require('./lib/functions');
 
